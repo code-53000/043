@@ -35,13 +35,16 @@ export function useGameLogic(level: Level | null) {
 
   const startDrawing = useCallback(
     (pos: Position) => {
-      if (!level) return;
-      if (path.length === 1 && isSamePosition(pos, level.startPosition)) {
+      if (!level || gameStatus === 'completed') return;
+      const lastPos = path[path.length - 1];
+      if (lastPos && isSamePosition(pos, lastPos)) {
         setIsDrawing(true);
-        setGameStatus('playing');
+        if (gameStatus === 'idle') {
+          setGameStatus('playing');
+        }
       }
     },
-    [level, path]
+    [level, path, gameStatus]
   );
 
   const moveTo = useCallback(
