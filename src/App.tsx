@@ -20,9 +20,10 @@ export default function App() {
   }, []);
 
   const handleBackToSelect = useCallback(() => {
+    gameLogic.closeCompletion();
     setViewMode('select');
     setSelectedLevel(null);
-  }, []);
+  }, [gameLogic]);
 
   const handleNextLevel = useCallback(() => {
     if (!selectedLevel) return;

@@ -31,9 +31,11 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
     color: ['#14b8a6', '#06b6d4', '#f59e0b', '#ef4444', '#8b5cf6'][Math.floor(Math.random() * 5)],
   }));
 
+  const shouldShow = isOpen && currentLevelId > 0;
+
   return (
     <AnimatePresence>
-      {isOpen && (
+      {shouldShow && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0 }}
