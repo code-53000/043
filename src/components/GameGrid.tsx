@@ -1,6 +1,6 @@
 import React, { useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Level, Position, isSamePosition } from '../types/game';
+import { Level, Position, isSamePosition, isObstacle, getTotalFillableCells } from '../types/game';
 import { GameCell } from './GameCell';
 import { getAvailableMoves } from '../utils/pathValidator';
 
@@ -9,11 +9,13 @@ interface GameGridProps {
   path: Position[];
   isDrawing: boolean;
   gameStatus: string;
+  totalFillableCells: number;
   onStartDrawing: (pos: Position) => void;
   onMoveTo: (pos: Position) => void;
   onStopDrawing: () => void;
   isCurrentPosition: (pos: Position) => boolean;
   isInPath: (pos: Position) => boolean;
+  isObstacleCell: (pos: Position) => boolean;
   getPathIndex: (pos: Position) => number;
   isStuck: boolean;
 }
@@ -23,11 +25,13 @@ export const GameGrid: React.FC<GameGridProps> = ({
   path,
   isDrawing,
   gameStatus,
+  totalFillableCells,
   onStartDrawing,
   onMoveTo,
   onStopDrawing,
   isCurrentPosition,
   isInPath,
+  isObstacleCell,
   getPathIndex,
   isStuck,
 }) => {
@@ -50,6 +54,7 @@ export const GameGrid: React.FC<GameGridProps> = ({
       for (let col = 0; col < level.gridSize; col++) {
         const pos = { row, col };
         const isStart = isSamePosition(pos, level.startPosition);
+        const obstacle = isObstacleCell(pos);
 
         cells.push(
           <GameCell
@@ -58,6 +63,7 @@ export const GameGrid: React.FC<GameGridProps> = ({
             isStart={isStart}
             isInPath={isInPath(pos)}
             isCurrent={isCurrentPosition(pos)}
+            isObstacle={obstacle}
             pathIndex={getPathIndex(pos)}
             gridSize={level.gridSize}
             onMouseDown={onStartDrawing}
@@ -68,7 +74,7 @@ export const GameGrid: React.FC<GameGridProps> = ({
       }
     }
     return cells;
-  }, [level, isInPath, isCurrentPosition, getPathIndex, onStartDrawing, onMoveTo, gameStatus]);
+  }, [level, isInPath, isCurrentPosition, isObstacleCell, getPathIndex, onStartDrawing, onMoveTo, gameStatus]);
 
   const isCompleted = gameStatus === 'completed';
 
@@ -84,8 +90,10 @@ export const GameGrid: React.FC<GameGridProps> = ({
 
   const availableMoves =
     path.length > 0 && !isCompleted
-      ? getAvailableMoves(path[path.length - 1], path, level.gridSize).length
+      ? getAvailableMoves(path[path.length - 1], path, level.gridSize, level.obstacles).length
       : 0;
+
+  const obstacleCount = level.obstacles?.length || 0;
 
   return (
     <motion.div
@@ -98,7 +106,8 @@ export const GameGrid: React.FC<GameGridProps> = ({
         <p className="text-gray-500 text-sm mb-1">{hint}</p>
         {path.length > 1 && !isCompleted && (
           <p className="text-xs text-gray-400">
-            已填 {path.length} / {level.gridSize * level.gridSize} 格
+            已填 {path.length} / {totalFillableCells} 格
+            {obstacleCount > 0 && ` (${obstacleCount} 个障碍)`}
             {availableMoves > 0 && ` · 还有 ${availableMoves} 个方向可走`}
           </p>
         )}

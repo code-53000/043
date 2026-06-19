@@ -1,8 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Lock, Check, Grid3X3 } from 'lucide-react';
-import { Level, PlayerProgress } from '../types/game';
-import { levels } from '../data/levels';
+import { Level, PlayerProgress, getTotalFillableCells } from '../types/game';
+import { getValidLevels } from '../data/levels';
+
+const levels = getValidLevels();
 
 interface LevelSelectProps {
   progress: PlayerProgress;
@@ -79,7 +81,10 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({ progress, onSelectLeve
             >
               <span className="text-2xl">{level.id}</span>
               <span className="text-xs mt-1 font-medium opacity-70">{level.name}</span>
-              <span className="text-xs opacity-50 mt-0.5">{level.gridSize}×{level.gridSize}</span>
+              <span className="text-xs opacity-50 mt-0.5">
+                {level.gridSize}×{level.gridSize}
+                {level.obstacles && level.obstacles.length > 0 && ` · ${level.obstacles.length}墙`}
+              </span>
 
               {isCompleted && (
                 <motion.div

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Position, GameStatus, Level, PlayerProgress, isSamePosition } from '../types/game';
+import { Position, GameStatus, Level, PlayerProgress, isSamePosition, getTotalFillableCells, isObstacle } from '../types/game';
 import { canMoveTo, isPathComplete, isStuck } from '../utils/pathValidator';
 import { useLocalStorage } from './useLocalStorage';
 import { getTotalLevels } from '../data/levels';
@@ -36,6 +36,7 @@ export function useGameLogic(level: Level | null) {
   const startDrawing = useCallback(
     (pos: Position) => {
       if (!level || gameStatus === 'completed') return;
+      if (isObstacle(pos, level.obstacles)) return;
       const lastPos = path[path.length - 1];
       if (lastPos && isSamePosition(pos, lastPos)) {
         setIsDrawing(true);
@@ -51,11 +52,11 @@ export function useGameLogic(level: Level | null) {
     (pos: Position) => {
       if (!isDrawing || !level || gameStatus === 'completed') return;
 
-      if (canMoveTo(pos, path, level.gridSize)) {
+      if (canMoveTo(pos, path, level.gridSize, level.obstacles)) {
         const newPath = [...path, pos];
         setPath(newPath);
 
-        if (isPathComplete(newPath, level.gridSize)) {
+        if (isPathComplete(newPath, level.gridSize, level.obstacles)) {
           setGameStatus('completed');
           setIsDrawing(false);
           handleLevelComplete();
@@ -121,8 +122,16 @@ export function useGameLogic(level: Level | null) {
     [path]
   );
 
-  const isStuckNow = level ? isStuck(path, level.gridSize) : false;
-  const progressPercent = level ? (path.length / (level.gridSize * level.gridSize)) * 100 : 0;
+  const isObstacleCell = useCallback(
+    (pos: Position): boolean => {
+      return level ? isObstacle(pos, level.obstacles) : false;
+    },
+    [level]
+  );
+
+  const totalFillableCells = level ? getTotalFillableCells(level.gridSize, level.obstacles) : 0;
+  const isStuckNow = level ? isStuck(path, level.gridSize, level.obstacles) : false;
+  const progressPercent = level && totalFillableCells > 0 ? (path.length / totalFillableCells) * 100 : 0;
 
   return {
     path,
@@ -132,6 +141,7 @@ export function useGameLogic(level: Level | null) {
     showCompletion,
     isStuck: isStuckNow,
     progressPercent,
+    totalFillableCells,
     startDrawing,
     moveTo,
     stopDrawing,
@@ -141,6 +151,7 @@ export function useGameLogic(level: Level | null) {
     isCurrentPosition,
     isInPath,
     getPathIndex,
+    isObstacleCell,
     canUndo: path.length > 1 && gameStatus !== 'completed',
     canReset: path.length > 1,
   };

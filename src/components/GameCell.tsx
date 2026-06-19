@@ -1,13 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Position, isSamePosition } from '../types/game';
-import { Play } from 'lucide-react';
+import { Play, X } from 'lucide-react';
 
 interface GameCellProps {
   position: Position;
   isStart: boolean;
   isInPath: boolean;
   isCurrent: boolean;
+  isObstacle: boolean;
   pathIndex: number;
   gridSize: number;
   onMouseDown: (pos: Position) => void;
@@ -20,6 +21,7 @@ export const GameCell: React.FC<GameCellProps> = ({
   isStart,
   isInPath,
   isCurrent,
+  isObstacle,
   pathIndex,
   gridSize,
   onMouseDown,
@@ -29,6 +31,9 @@ export const GameCell: React.FC<GameCellProps> = ({
   const cellSize = gridSize <= 4 ? 80 : gridSize <= 5 ? 68 : gridSize <= 6 ? 56 : 48;
 
   const getCellStyles = () => {
+    if (isObstacle) {
+      return 'bg-gradient-to-br from-gray-700 to-gray-900 text-gray-400 cursor-not-allowed';
+    }
     if (isCompleted) {
       return 'bg-gradient-to-br from-primary-400 to-accent-500 text-white';
     }
@@ -39,6 +44,17 @@ export const GameCell: React.FC<GameCellProps> = ({
       return 'bg-gradient-to-br from-primary-300 to-accent-400 text-white';
     }
     return 'bg-white hover:bg-gray-50 text-gray-600';
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isObstacle) return;
+    e.preventDefault();
+    onMouseDown(position);
+  };
+
+  const handleMouseEnter = () => {
+    if (isObstacle) return;
+    onMouseEnter(position);
   };
 
   return (
@@ -53,21 +69,29 @@ export const GameCell: React.FC<GameCellProps> = ({
       className={`
         relative flex items-center justify-center rounded-xl cursor-pointer
         select-none transition-all duration-150 ease-out
-        border-2 border-gray-100 shadow-sm
+        border-2 shadow-sm
+        ${isObstacle ? 'border-gray-800' : 'border-gray-100'}
         ${getCellStyles()}
-        ${!isInPath && !isCompleted ? 'hover:border-primary-200' : ''}
+        ${!isInPath && !isCompleted && !isObstacle ? 'hover:border-primary-200' : ''}
       `}
       style={{
         width: `${cellSize}px`,
         height: `${cellSize}px`,
       }}
-      onMouseDown={(e) => {
-        e.preventDefault();
-        onMouseDown(position);
-      }}
-      onMouseEnter={() => onMouseEnter(position)}
+      onMouseDown={handleMouseDown}
+      onMouseEnter={handleMouseEnter}
     >
-      {isStart && !isInPath && (
+      {isObstacle && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          <X className="w-6 h-6 text-gray-600" strokeWidth={2.5} />
+        </motion.div>
+      )}
+
+      {isStart && !isInPath && !isObstacle && (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -77,7 +101,7 @@ export const GameCell: React.FC<GameCellProps> = ({
         </motion.div>
       )}
 
-      {isInPath && !isCurrent && (
+      {isInPath && !isCurrent && !isObstacle && (
         <motion.span
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -87,7 +111,7 @@ export const GameCell: React.FC<GameCellProps> = ({
         </motion.span>
       )}
 
-      {isCurrent && (
+      {isCurrent && !isObstacle && (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -97,7 +121,7 @@ export const GameCell: React.FC<GameCellProps> = ({
         </motion.div>
       )}
 
-      {isCompleted && isStart && (
+      {isCompleted && isStart && !isObstacle && (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}

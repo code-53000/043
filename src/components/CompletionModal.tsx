@@ -97,7 +97,12 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
                   第 {currentLevelId} 关 · {currentLevel?.name}
                 </p>
                 <p className="text-sm text-gray-400 mb-8">
-                  {currentLevel?.gridSize}×{currentLevel?.gridSize} 网格已全部填满
+                  {currentLevel?.gridSize}×{currentLevel?.gridSize} 网格
+                  {currentLevel?.obstacles && currentLevel.obstacles.length > 0
+                    ? ` · ${currentLevel.obstacles.length} 个障碍 · ${
+                        (currentLevel?.gridSize ?? 0) ** 2 - (currentLevel?.obstacles?.length ?? 0)
+                      } 格已全部填满`
+                    : ' 已全部填满'}
                 </p>
               </motion.div>
 
